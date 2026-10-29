@@ -7,6 +7,7 @@ from .retry_prompt import build_retry_prompt
 from .agent import generate_repair
 from .repair_loop import repair_once, MAX_ATTEMPTS
 from .job import Job
+from .source_localizer import find_source_frame
 
 
 def debug_repository(
@@ -42,11 +43,21 @@ def debug_repository(
 
     source_code = ""
 
-    if evidence["test_file"]:
-        test_file = workspace / evidence["test_file"]
+    source_frame = find_source_frame(
+        result=result,
+        workspace=workspace,
+        test_file=evidence["test_file"]
+    )
 
-        if test_file.exists():
-            source_code = read_file(str(test_file))
+    if source_frame:
+        evidence["source_file"] = source_frame["file_path"]
+        evidence["source_line"] = source_frame["line_number"]
+        evidence["source_function"] = source_frame["function_name"]
+
+        source_path = workspace / source_frame["file_path"]
+
+        if source_path.exists():
+            source_code = read_file(str(source_path))
 
     job.status = "REPAIRING"
 
@@ -98,10 +109,21 @@ def debug_repository(
 
         current_source = ""
 
-        current_file = workspace / previous_attempt.file_path
+        source_frame = find_source_frame(
+            result=current_result,
+            workspace=workspace,
+            test_file=current_evidence["test_file"]
+        )
 
-        if current_file.exists():
-            current_source = read_file(str(current_file))
+        if source_frame:
+            current_evidence["source_file"] = source_frame["file_path"]
+            current_evidence["source_line"] = source_frame["line_number"]
+            current_evidence["source_function"] = source_frame["function_name"]
+
+            source_path = workspace / source_frame["file_path"]
+
+            if source_path.exists():
+                current_source = read_file(str(source_path))
 
         retry_prompt = build_retry_prompt(
             result=current_result,
