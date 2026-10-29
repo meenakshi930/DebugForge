@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 @dataclass
 class TestFailure:
+    __test__ = False
+    
     command: str
     exit_code: int | None
     stdout: str
