@@ -8,6 +8,7 @@ from .agent import generate_repair
 from .repair_loop import repair_once, MAX_ATTEMPTS
 from .job import Job
 from .source_localizer import find_source_frame
+from .source_context import extract_function
 
 
 def debug_repository(
@@ -57,7 +58,15 @@ def debug_repository(
         source_path = workspace / source_frame["file_path"]
 
         if source_path.exists():
-            source_code = read_file(str(source_path))
+            full_source = read_file(str(source_path))
+
+            source_code = extract_function(
+                source_code=full_source,
+                function_name=source_frame["function_name"]
+            )
+
+            if source_code is None:
+                source_code = full_source
 
     job.status = "REPAIRING"
 
@@ -123,7 +132,15 @@ def debug_repository(
             source_path = workspace / source_frame["file_path"]
 
             if source_path.exists():
-                current_source = read_file(str(source_path))
+                full_source = read_file(str(source_path))
+
+                current_source = extract_function(
+                    source_code=full_source,
+                    function_name=source_frame["function_name"]
+                )
+
+                if current_source is None:
+                    current_source = full_source
 
         retry_prompt = build_retry_prompt(
             result=current_result,
