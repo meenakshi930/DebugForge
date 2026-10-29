@@ -35,3 +35,50 @@ TASK:
 
 Return your analysis clearly.
 """.strip()
+
+def build_repair_prompt(
+    result,
+    evidence: dict,
+    source_code: str
+) -> str:
+
+    return f"""
+You are an autonomous debugging engineer.
+
+Analyze the failing Python test and propose the smallest safe code change.
+
+TEST RESULT:
+Status: {evidence["status"]}
+Test file: {evidence["test_file"]}
+Test name: {evidence["test_name"]}
+Error: {evidence["error"]}
+Expected: {evidence["expected"]}
+Actual: {evidence["actual"]}
+
+COMMAND:
+{result.command}
+
+SOURCE CODE:
+{source_code}
+
+Return your response in exactly this format:
+
+DIAGNOSIS:
+<short explanation of the root cause>
+
+FILE:
+<relative file path>
+
+OLD_CODE:
+<exact code that should be replaced>
+
+NEW_CODE:
+<replacement code>
+
+RULES:
+- Change only the code necessary to fix the bug.
+- Do not modify the test.
+- OLD_CODE must exactly match the existing source code.
+- Do not include markdown code fences.
+- Do not include any text outside the required sections.
+""".strip()
