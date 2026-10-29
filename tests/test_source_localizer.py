@@ -64,3 +64,35 @@ def test_find_source_frame_ignores_test_file(tmp_path):
     assert found["file_path"] == "app.py"
     assert found["line_number"] == 2
     assert found["function_name"] == "calculate_discount"
+
+def test_find_source_frame_from_module_import(tmp_path):
+    test_file = tmp_path / "test_app.py"
+    source_file = tmp_path / "app.py"
+
+    test_file.write_text(
+        "import app\n\n"
+        "def test_calculate_discount():\n"
+        "    assert app.calculate_discount(3500, 10) == 3150\n"
+    )
+
+    source_file.write_text(
+        "def calculate_discount(price, discount):\n"
+        "    return price / discount\n"
+    )
+
+    result = TestFailure(
+        command="pytest",
+        exit_code=1,
+        stdout="test_app.py:4: AssertionError\n",
+        stderr=""
+    )
+
+    found = find_source_frame(
+        result=result,
+        workspace=tmp_path,
+        test_file="test_app.py"
+    )
+
+    assert found is not None
+    assert found["file_path"] == "app.py"
+    assert found["function_name"] == "calculate_discount"
