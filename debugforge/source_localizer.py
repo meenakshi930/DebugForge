@@ -43,16 +43,35 @@ def find_source_frame(
 
     test_code = test_path.read_text(encoding="utf-8")
 
-    import_match = re.search(
+    from_import_match = re.search(
         r"from\s+([\w.]+)\s+import\s+([A-Za-z_][A-Za-z0-9_]*)",
         test_code
     )
 
-    if not import_match:
-        return None
+    import_match = re.search(
+        r"import\s+([A-Za-z_][A-Za-z0-9_]*)",
+        test_code
+    )
 
-    module_name = import_match.group(1)
-    function_name = import_match.group(2)
+    if from_import_match:
+        module_name = from_import_match.group(1)
+        function_name = from_import_match.group(2)
+
+    elif import_match:
+        module_name = import_match.group(1)
+
+        function_match = re.search(
+            rf"{re.escape(module_name)}\.([A-Za-z_][A-Za-z0-9_]*)",
+            test_code
+        )
+
+        if not function_match:
+            return None
+
+        function_name = function_match.group(1)
+
+    else:
+        return None
 
     module_path = workspace / Path(
         module_name.replace(".", "/") + ".py"
