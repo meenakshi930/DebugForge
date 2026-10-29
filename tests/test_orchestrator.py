@@ -57,8 +57,11 @@ return total - (total * (discount / 100))
         test_command="pytest"
     )
 
-    assert result["status"] ==  "VERIFIED"
+    assert result["status"] == "VERIFIED"
     assert result["repair_result"]["verified"] is True
+    assert "source_file" in result["evidence"]
+    assert "source_line" in result["evidence"]
+    assert "source_function" in result["evidence"]
 
     repair = result["repair"]
 
