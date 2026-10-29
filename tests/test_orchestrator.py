@@ -44,6 +44,9 @@ return total - (total * (discount / 100))
 """
 
     def fake_generate_repair(prompt):
+        assert "def calculate_discount" in prompt
+        assert "return total - (total * discount)" in prompt
+
         from debugforge.repair_parser import parse_repair_response
         return parse_repair_response(fake_repair)
 
