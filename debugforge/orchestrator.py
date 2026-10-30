@@ -43,7 +43,6 @@ def debug_repository(
         }
 
     source_code = ""
-
     source_frame = find_source_frame(
         result=result,
         workspace=workspace,
@@ -77,6 +76,9 @@ def debug_repository(
     )
 
     repair = generate_repair(repair_prompt)
+
+    if source_frame and repair.file_path != source_frame["file_path"]:
+        repair.file_path = source_frame["file_path"]
 
     repair_result = repair_once(
         job=job,
@@ -150,6 +152,9 @@ def debug_repository(
         )
 
         repair = generate_repair(retry_prompt)
+
+        if source_frame and repair.file_path != source_frame["file_path"]:
+            repair.file_path = source_frame["file_path"]
 
         repair_result = repair_once(
             job=job,
