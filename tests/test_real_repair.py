@@ -1,8 +1,11 @@
+from pathlib import Path
+
+import pytest
+
 from debugforge.orchestrator import debug_repository
 
 
 def test_real_repair(monkeypatch, tmp_path):
-
     repo = tmp_path / "repo"
     repo.mkdir()
 
@@ -59,11 +62,51 @@ return total - (total * (discount / 100))
     )
 
     assert result["status"] == "VERIFIED"
-
     assert result["repair_result"]["verified"] is True
-
     assert len(result["job"].attempts.attempts) == 1
 
     attempt = result["job"].attempts.last_attempt()
 
     assert attempt.verified is True
+
+
+@pytest.mark.integration
+def test_real_nemotron_repairs_bug(tmp_path):
+    app_file = tmp_path / "app.py"
+
+    app_file.write_text(
+        """def add(a, b):
+    return a - b
+""",
+        encoding="utf-8"
+    )
+
+    test_file = tmp_path / "test_app.py"
+
+    test_file.write_text(
+        """from app import add
+
+
+def test_add():
+    assert add(2, 3) == 5
+""",
+        encoding="utf-8"
+    )
+
+    result = debug_repository(
+        repo_path=str(tmp_path),
+        test_command="pytest test_app.py"
+    )
+
+    print("\nSTATUS:", result["status"])
+    print("\nEVIDENCE:", result["evidence"])
+    print("\nREPAIR:", result.get("repair"))
+    print("\nREPAIR RESULT:", result.get("repair_result"))
+
+    assert result["status"] == "VERIFIED"
+
+    repaired_file = Path(result["workspace"]) / "app.py"
+
+    assert "return a + b" in repaired_file.read_text(
+        encoding="utf-8"
+    )
