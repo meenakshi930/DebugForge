@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from .patch_validator import validate_patch
+
 
 def apply_patch(
     file_path: str,
@@ -14,11 +16,24 @@ def apply_patch(
 
     content = path.read_text(encoding="utf-8")
 
-    if old_code not in content:
+    validation = validate_patch(
+        source_code=content,
+        old_code=old_code,
+        new_code=new_code
+    )
+
+    if not validation["valid"]:
         return False
 
-    updated_content = content.replace(old_code, new_code, 1)
+    updated_content = content.replace(
+        old_code,
+        new_code,
+        1
+    )
 
-    path.write_text(updated_content, encoding="utf-8")
+    path.write_text(
+        updated_content,
+        encoding="utf-8"
+    )
 
     return True
